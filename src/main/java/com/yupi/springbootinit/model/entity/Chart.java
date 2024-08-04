@@ -12,7 +12,7 @@ import lombok.Data;
  *
  * @TableName charts
  */
-@TableName(value = "charts")
+@TableName(value = "chart")
 @Data
 public class Chart implements Serializable {
     /**
@@ -20,6 +20,8 @@ public class Chart implements Serializable {
      */
     @TableId(type = IdType.ASSIGN_ID)
     private Long id;
+
+    private String name;
 
     /**
      * analysis goal

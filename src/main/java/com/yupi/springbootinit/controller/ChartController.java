@@ -1,9 +1,12 @@
 package com.yupi.springbootinit.controller;
 
+import java.util.Date;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.gson.Gson;
 import com.yupi.springbootinit.annotation.AuthCheck;
+import com.yupi.springbootinit.api.SydneyQT;
 import com.yupi.springbootinit.common.BaseResponse;
 import com.yupi.springbootinit.common.DeleteRequest;
 import com.yupi.springbootinit.common.ErrorCode;
@@ -12,20 +15,20 @@ import com.yupi.springbootinit.constant.CommonConstant;
 import com.yupi.springbootinit.constant.UserConstant;
 import com.yupi.springbootinit.exception.BusinessException;
 import com.yupi.springbootinit.exception.ThrowUtils;
-import com.yupi.springbootinit.model.dto.chart.ChartAddRequest;
-import com.yupi.springbootinit.model.dto.chart.ChartEditRequest;
-import com.yupi.springbootinit.model.dto.chart.ChartQueryRequest;
-import com.yupi.springbootinit.model.dto.chart.ChartUpdateRequest;
+import com.yupi.springbootinit.model.dto.chart.*;
 import com.yupi.springbootinit.model.entity.Chart;
 import com.yupi.springbootinit.model.entity.User;
+import com.yupi.springbootinit.model.vo.BIResponse;
 import com.yupi.springbootinit.service.ChartService;
 import com.yupi.springbootinit.service.UserService;
+import com.yupi.springbootinit.utils.ExcelUtils;
 import com.yupi.springbootinit.utils.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -40,6 +43,9 @@ public class ChartController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private SydneyQT sydneyQT;
 
     private final static Gson GSON = new Gson();
 
@@ -141,7 +147,7 @@ public class ChartController {
      */
     @PostMapping("/list/page")
     public BaseResponse<Page<Chart>> listChartByPage(@RequestBody ChartQueryRequest chartQueryRequest,
-                                                       HttpServletRequest request) {
+                                                     HttpServletRequest request) {
         long current = chartQueryRequest.getCurrent();
         long size = chartQueryRequest.getPageSize();
         // 限制爬虫
@@ -160,7 +166,7 @@ public class ChartController {
      */
     @PostMapping("/my/list/page")
     public BaseResponse<Page<Chart>> listMyChartByPage(@RequestBody ChartQueryRequest chartQueryRequest,
-                                                         HttpServletRequest request) {
+                                                       HttpServletRequest request) {
         if (chartQueryRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -210,6 +216,7 @@ public class ChartController {
         }
         String sortField = chartQueryRequest.getSortField();
         String sortOrder = chartQueryRequest.getSortOrder();
+        String name = chartQueryRequest.getName();
         Long id = chartQueryRequest.getId();
         String goal = chartQueryRequest.getGoal();
         Long userId = chartQueryRequest.getUserId();
@@ -218,10 +225,71 @@ public class ChartController {
         queryWrapper.eq(StringUtils.isNotEmpty(goal), "goal", goal);
         queryWrapper.eq(ObjectUtils.isNotEmpty(userId), "userId", userId);
         queryWrapper.eq(ObjectUtils.isNotEmpty(chartType), "chartType", chartType);
+        queryWrapper.like(ObjectUtils.isNotEmpty(name), "name", name);
 
         queryWrapper.eq("isDelete", false);
         queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
                 sortField);
         return queryWrapper;
+    }
+
+    /**
+     * intelligent analysis
+     *
+     * @param multipartFile
+     * @param
+     * @param request
+     * @return
+     */
+    @PostMapping("/gen")
+    public BaseResponse<BIResponse> genChatByAI(@RequestPart("file") MultipartFile multipartFile,
+                                                GenChartByAIRequest genChartByAIRequest, HttpServletRequest request) {
+        String name = genChartByAIRequest.getName();
+        String goal = genChartByAIRequest.getGoal();
+        String chartType = genChartByAIRequest.getChartType();
+
+        User loginUser = userService.getLoginUser(request);
+
+        //verify
+        ThrowUtils.throwIf(StringUtils.isBlank(goal), ErrorCode.PARAMS_ERROR, "goal is empty");
+        ThrowUtils.throwIf(StringUtils.isBlank(name) && name.length() > 100, ErrorCode.PARAMS_ERROR, "name is invalid");
+
+        StringBuilder sb = new StringBuilder();
+
+        //read Excel file and compress data
+        String result = ExcelUtils.excelToCSV(multipartFile),
+                prompt = "You are a data analyst. I will give you my analysis goal and original data. Please analyze the data for me. First part is giving me a conclusion. The second is generate frontend ECharts v5 option configuration object code in JSON according to my data. Do not output any unnecessary beginning or ending in your response or the code. Use '----------' to divide different parts";
+        sb.append("Analysis goal: ").append(goal);
+        if (StringUtils.isNotBlank(chartType)) {
+            sb.append(" Please use the chart type ").append(chartType).append("\n");
+        }
+        sb.append("My data: ").append(result).append("\n");
+
+        String response = sydneyQT.chat(prompt, sb.toString());
+        String[] splits = response.split("----------");
+
+        if (splits.length < 2) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "AI generation error");
+        }
+
+        String genResult = splits[0].trim(), genChart = splits[1].trim();
+
+        Chart chart = new Chart();
+        chart.setName(name);
+        chart.setGoal(goal);
+        chart.setChartData(result);
+        chart.setChartType(chartType);
+        chart.setGenChart(genChart);
+        chart.setGenResult(genResult);
+        chart.setUserId(loginUser.getId());
+        boolean saveResult = chartService.save(chart);
+        ThrowUtils.throwIf(!saveResult, ErrorCode.SYSTEM_ERROR, "Chart save error");
+
+        BIResponse biResponse = new BIResponse();
+        biResponse.setGenChart(genChart);
+        biResponse.setGenResult(genResult);
+        biResponse.setChartId(chart.getId());
+
+        return ResultUtils.success(biResponse);
     }
 }

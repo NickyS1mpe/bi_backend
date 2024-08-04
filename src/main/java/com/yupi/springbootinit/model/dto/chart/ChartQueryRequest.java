@@ -16,6 +16,9 @@ import java.io.Serializable;
 @Data
 public class ChartQueryRequest extends PageRequest implements Serializable {
 
+    private String name;
+
+
     /**
      * id
      */

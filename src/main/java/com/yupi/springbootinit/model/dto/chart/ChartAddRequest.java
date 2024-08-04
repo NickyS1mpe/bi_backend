@@ -12,6 +12,7 @@ import java.io.Serializable;
  */
 @Data
 public class ChartAddRequest implements Serializable {
+    private String name;
 
 
     /**
