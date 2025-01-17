@@ -23,3 +23,8 @@
 ### Unit Tests
 
 - JUnit5
+
+### Screenshots & Examples
+
+![](/Users/nicklee/Desktop/Screenshot 2025-01-16 at 10.42.35 PM.png)
+![](/Users/nicklee/Desktop/Screenshot 2025-01-16 at 10.43.10 PM.png)
