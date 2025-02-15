@@ -3,13 +3,13 @@ package com.nick.springbootinit.exception;
 import com.nick.springbootinit.common.ErrorCode;
 
 /**
- * 自定义异常类
+ * Exception Handler
  *
  */
 public class BusinessException extends RuntimeException {
 
     /**
-     * 错误码
+     * Error Code
      */
     private final int code;
 

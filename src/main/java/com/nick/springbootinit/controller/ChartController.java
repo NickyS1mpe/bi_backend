@@ -1,5 +1,6 @@
 package com.nick.springbootinit.controller;
 
+import cn.hutool.core.io.FileUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.gson.Gson;
@@ -31,6 +32,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @RestController
 @RequestMapping("/chart")
@@ -250,8 +254,23 @@ public class ChartController {
         User loginUser = userService.getLoginUser(request);
 
         //verify
-        ThrowUtils.throwIf(StringUtils.isBlank(goal), ErrorCode.PARAMS_ERROR, "goal is empty");
-        ThrowUtils.throwIf(StringUtils.isBlank(name) && name.length() > 100, ErrorCode.PARAMS_ERROR, "name is invalid");
+        ThrowUtils.throwIf(StringUtils.isBlank(goal), ErrorCode.PARAMS_ERROR, "Goal is empty");
+        ThrowUtils.throwIf(StringUtils.isBlank(name) && name.length() > 100, ErrorCode.PARAMS_ERROR, "Name is invalid");
+
+        // Verify file size
+        long size = multipartFile.getSize();
+        final long mb = 1024 * 1024L;
+        if (size > 1 * mb) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "File is too large!");
+        }
+
+        // Verify file suffix
+        String filename = multipartFile.getOriginalFilename();
+        String suffix = FileUtil.getSuffix(filename);
+        final List<String> validSuffix = Arrays.asList("xlsx", "cvs");
+        if (!validSuffix.contains(suffix)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "File type is not supported!");
+        }
 
         StringBuilder sb = new StringBuilder();
 
