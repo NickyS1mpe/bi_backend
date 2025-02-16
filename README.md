@@ -58,7 +58,7 @@ structured responses, enhances accuracy, and supports dynamic data visualization
 
 ### Screenshots & Examples
 
-![](/Users/nicklee/Desktop/Screenshot 2025-01-16 at 10.42.35 PM.png)
-![](/Users/nicklee/Desktop/Screenshot 2025-01-16 at 10.43.10 PM.png)
+![](https://github.com/NickyS1mpe/bi_backend/blob/master/SampleImg1.jpeg)
+![](https://github.com/NickyS1mpe/bi_backend/blob/master/SampleImg2.jpeg)
 
 ## Future Enhancements
