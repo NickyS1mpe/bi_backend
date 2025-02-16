@@ -56,7 +56,7 @@ structured responses, enhances accuracy, and supports dynamic data visualization
 - Wait until receive AI analysis results and chart.
 - View past analyses from My Charts.
 
-### Screenshots & Examples
+## Screenshots & Examples
 
 ![](https://github.com/NickyS1mpe/bi_backend/blob/master/SampleImg1.jpeg)
 ![](https://github.com/NickyS1mpe/bi_backend/blob/master/SampleImg2.jpeg)
