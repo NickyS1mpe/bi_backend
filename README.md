@@ -42,6 +42,7 @@ structured responses, enhances accuracy, and supports dynamic data visualization
 - Gson
 - Apache Commons Lang3
 - Lombok
+- API Swagger
 
 ### Unit Tests
 
