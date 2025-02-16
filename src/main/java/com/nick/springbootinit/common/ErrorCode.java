@@ -2,7 +2,6 @@ package com.nick.springbootinit.common;
 
 /**
  * 自定义错误码
- *
  */
 public enum ErrorCode {
 
@@ -12,6 +11,8 @@ public enum ErrorCode {
     NO_AUTH_ERROR(40101, "No permission"),
     NOT_FOUND_ERROR(40400, "Data not found"),
     FORBIDDEN_ERROR(40300, "Forbidden"),
+    TOO_MANY_REQUEST(42900, "Too many requests"),
+
     SYSTEM_ERROR(50000, "System error"),
     OPERATION_ERROR(50001, "Operation error");
 

@@ -14,6 +14,7 @@ import com.nick.springbootinit.constant.CommonConstant;
 import com.nick.springbootinit.constant.UserConstant;
 import com.nick.springbootinit.exception.BusinessException;
 import com.nick.springbootinit.exception.ThrowUtils;
+import com.nick.springbootinit.manager.RedisLimiterManager;
 import com.nick.springbootinit.model.dto.chart.*;
 import com.nick.springbootinit.model.dto.chart.*;
 import com.nick.springbootinit.model.entity.Chart;
@@ -49,6 +50,9 @@ public class ChartController {
 
     @Resource
     private SydneyQT sydneyQT;
+
+    @Resource
+    private RedisLimiterManager redisLimiterManager;
 
     private final static Gson GSON = new Gson();
 
@@ -271,6 +275,9 @@ public class ChartController {
         if (!validSuffix.contains(suffix)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "File type is not supported!");
         }
+
+        // Rate Limit
+        redisLimiterManager.rateLimit("genChatByAI_" + String.valueOf(loginUser.getId()));
 
         StringBuilder sb = new StringBuilder();
 
