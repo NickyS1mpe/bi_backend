@@ -59,3 +59,5 @@ structured responses, enhances accuracy, and supports dynamic data visualization
 
 ![](/Users/nicklee/Desktop/Screenshot 2025-01-16 at 10.42.35 PM.png)
 ![](/Users/nicklee/Desktop/Screenshot 2025-01-16 at 10.43.10 PM.png)
+
+## Future Enhancements
